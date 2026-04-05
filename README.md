@@ -2,10 +2,8 @@
 
 **Interactive pet reroller for Claude Code `/buddy`. Pick your dream pet.**
 
-Claude Code `/buddy` pet reroller — pick species, rarity, eyes, hat, shiny.
-
 ```bash
-npx cc-buddy
+node buddy-reroll.mjs
 ```
 
 Zero dependencies. Node.js 16+ / Bun. Bilingual: English / Tiếng Việt.
@@ -25,7 +23,7 @@ Zero dependencies. Node.js 16+ / Bun. Bilingual: English / Tiếng Việt.
 ## Quick Start
 
 ```bash
-npx cc-buddy
+node buddy-reroll.mjs
 ```
 
 First run asks you to pick a language, then drops you into the main menu:
@@ -64,22 +62,22 @@ Apply this buddy to your config? [Y/n]:
 
 ```bash
 # Search for shiny legendary dragon with wizard hat
-npx cc-buddy search -s dragon -r legendary --hat wizard --eye '✦' --shiny
+node buddy-reroll.mjs search -s dragon -r legendary --hat wizard --eye '✦' --shiny
 
 # Check current buddy
-npx cc-buddy check
+node buddy-reroll.mjs check
 
 # Apply a userID
-npx cc-buddy apply <userID>
+node buddy-reroll.mjs apply <userID>
 
 # Species gallery
-npx cc-buddy gallery
+node buddy-reroll.mjs gallery
 
 # Verify hash implementation
-npx cc-buddy selftest
+node buddy-reroll.mjs selftest
 
 # Switch language
-npx cc-buddy lang
+node buddy-reroll.mjs lang
 ```
 
 ### CLI Flags
@@ -91,12 +89,13 @@ npx cc-buddy lang
 | `--eye, -e` | Eye style: `·` `✦` `×` `◉` `@` `°` |
 | `--hat` | `none` `crown` `tophat` `propeller` `halo` `wizard` `beanie` `tinyduck` |
 | `--shiny` | Require shiny |
-| `--limit, -l` | Max attempts (default: 5,000,000) |
+| `--limit, -l` | Max attempts (default: 100,000,000) |
 | `--min-points <N>` | Total 5 stats >= N (0-500) |
 | `--stat <NAME> <N>` | Stat NAME >= N. Repeatable. Valid: DEBUGGING, PATIENCE, CHAOS, WISDOM, SNARK |
 | `--parallel` | Use all CPU cores for search |
+| `--unlimited` | Roll forever until criteria met |
 | `--apply` | Auto-apply first match without confirm |
-| `--lang` | `en` or `zh` |
+| `--lang` | `en` or `vi` |
 | `--json` | JSON output |
 
 ## Species
@@ -141,7 +140,7 @@ After using the search, you can manually tweak any attribute by editing `~/.clau
 
 You only need to include the fields you want to change. Omitted fields keep their hash-computed values. Stats are merged individually — override one without losing the rest.
 
-Works on both **npm** and **native binary** installs. Restart Claude Code after editing.
+Works on both **npm install** and **native binary** installs. Restart Claude Code after editing.
 
 ## How It Works
 
@@ -170,26 +169,10 @@ This tool:
 - Node.js >= 16 or Bun
 - Tool auto-detects version and warns if outdated
 
-## Install
-
-No install needed:
-
-```bash
-npx cc-buddy
-```
-
-Or install globally:
-
-```bash
-npm i -g cc-buddy
-cc-buddy
-```
-
 ## License
 
 MIT
 
----
 ---
 
 # Hướng dẫn tiếng Việt
@@ -207,7 +190,7 @@ MIT
 ## Sử dụng
 
 ```bash
-npx cc-buddy
+node buddy-reroll.mjs
 ```
 
 Lần đầu chọn ngôn ngữ, sau đó vào menu chính:
@@ -216,11 +199,10 @@ Lần đầu chọn ngôn ngữ, sau đó vào menu chính:
 Bạn muốn làm gì?
   [1] 🔍  Tìm & áp dụng buddy
   [2] 👀  Xem buddy hiện tại
-  [3] ✏️   Tùy chỉnh tên/tính cách
-  [4] 📋  Bảng thú cưng
-  [5] 🧪  Tự kiểm tra hash
-  [6] 🌐  Đổi ngôn ngữ
-  [7] 👋  Thoát
+  [3] 📋  Bảng thú cưng
+  [4] 🧪  Tự kiểm tra hash
+  [5] 🌐  Đổi ngôn ngữ
+  [6] 👋  Thoát
 ```
 
 Quá trình tìm kiếm hướng dẫn từng bước, Enter để bỏ qua bất kỳ bước nào:
@@ -263,29 +245,6 @@ Sau khi tìm và áp dụng, có thể sửa tay `~/.claude.json` để chỉnh 
 ```
 
 Chỉ cần ghi các trường muốn đổi, các trường còn lại giữ nguyên hash. Stats được merge từng trường — đổi một cái không mất cái khác.
-
-Hỗ trợ cả **cài qua npm** và **binary gốc**. Sửa xong khởi động lại Claude Code.
-
-## Nguyên lý hoạt động
-
-Hệ thống pet `/buddy` của Claude Code có 2 lớp:
-
-- **Bones (xương)** — loài, độ hiếm, mắt, mũ, chỉ số, shiny. Tạo từ `hash(userID + SALT)`, tính mỗi lần chạy, không lưu.
-- **Soul (linh hồn)** — tên và tính cách. Tạo bởi model, lưu trong `~/.claude.json` ở field `companion`.
-
-Tool này:
-1. Tìm random `userID` cho đến khi hash ra pet mong muốn
-2. Inject hỗ trợ `companionOverride` vào Claude Code (tùy chỉnh bones)
-3. Ghi cả `userID` và override vào config — ba lớp đảm bảo
-
-### Chi tiết kỹ thuật
-
-- Claude Code là binary Bun → dùng `Bun.hash()` (thuật toán wyhash)
-- Tool bao gồm **wyhash bằng JavaScript thuần**, đã cross-verify cho kết quả y hệt `Bun.hash`
-- Chạy được trên cả Node.js và Bun — kết quả giống nhau
-- **Cài npm**: inject đọc `companionOverride` vào `getCompanion()` — không sợ đổi tên biến theo version
-- **Binary gốc**: đổi SALT + swap spread + re-sign
-- Người dùng OAuth: tự xóa `accountUuid` để seed về `userID`. OAuth không bị ảnh hưởng (auth dùng `accessToken`)
 
 ## Lưu ý
 
